@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>TaskMate</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#eef4ff;color:#263653}
+header{background:#2864b5;color:white;padding:25px}
+main{max-width:850px;margin:auto;padding:20px}
+.card{background:white;padding:22px;border-radius:15px;margin:20px 0}
+input,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:8px}
+button{background:#2864b5;color:white;border:0;cursor:pointer}
+.item{padding:15px;border-bottom:1px solid #eee}
+.actions{display:flex;gap:8px}
+.actions button{width:auto}
+</style>
+</head>
+<body>
+<header><h1>📋 TaskMate</h1><p>Organize your daily activities.</p></header>
+<main>
+<div class="card">
+<h2>Add New Task</h2>
+<input id="task" placeholder="Task name">
+<select id="priority"><option>Low</option><option>Medium</option><option>High</option></select>
+<input id="date" type="date">
+<button onclick="add()">Add Task</button>
+</div>
+<div class="card">
+<h2>My Tasks</h2>
+<input id="search" placeholder="Search tasks..." oninput="render()">
+<div id="list"></div>
+</div>
+</main>
+<script>
+let data=JSON.parse(localStorage.getItem('tasks')||'[]');
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem('tasks',JSON.stringify(data));render()}
+function add(){
+let n=$('task').value.trim(),p=$('priority').value,d=$('date').value;
+if(!n||!d)return alert('Complete all fields.');
+data.unshift({id:Date.now(),n,p,d,done:false});
+$('task').value='';$('date').value='';save();
+}
+function edit(id){
+let x=data.find(a=>a.id===id),v=prompt('Task name:',x.n);
+if(v&&v.trim()){x.n=v.trim();save()}
+}
+function del(id){if(confirm('Delete task?')){data=data.filter(x=>x.id!==id);save()}}
+function toggle(id){let x=data.find(a=>a.id===id);x.done=!x.done;save()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+let q=$('search').value.toLowerCase();
+$('list').innerHTML=data.filter(x=>x.n.toLowerCase().includes(q)).map(x=>`
+<div class="item">
+<h3>${x.done?'✅':'📝'} ${esc(x.n)}</h3>
+<p>Priority: ${esc(x.p)} | Due: ${esc(x.d)}</p>
+<div class="actions">
+<button onclick="toggle(${x.id})">${x.done?'Undo':'Complete'}</button>
+<button onclick="edit(${x.id})">Edit</button>
+<button onclick="del(${x.id})">Delete</button>
+</div></div>`).join('')||'No tasks found.'}
+render();
+</script>
+</body>
+</html>
